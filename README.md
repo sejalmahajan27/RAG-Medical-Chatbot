@@ -33,12 +33,12 @@ OLLAMA_MODEL="mistral"   # Mistral local LLM
 ```
 
 
-# STEP 04 - Store embeddings in Pinecone
+### STEP 04 - Store embeddings in Pinecone
 ```bash
 python store_index.py
 ```
 
-# STEP 05 - Run the chatbot
+### STEP 05 - Run the chatbot
 ```bash
 python app.py
 
