@@ -14,22 +14,14 @@ from langchain_core.prompts import ChatPromptTemplate
 
 app = Flask(__name__)
 
-@app.route("/")
-def index():
-    return render_template('chat.html')
 
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)
-
-
-'''
 # Load environment variables
 load_dotenv()
 
 # Pinecone key only
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
+
 
 
 # ===============================
@@ -45,6 +37,7 @@ docsearch = PineconeVectorStore.from_existing_index(
     embedding=embeddings
 )
 
+
 retriever = docsearch.as_retriever(
     search_type="similarity",
     search_kwargs={"k": 3}
@@ -54,8 +47,8 @@ retriever = docsearch.as_retriever(
 # Ollama LLM (LOCAL)
 # ===============================
 llm = Ollama(
-    model="llama3",   # or mistral / phi3 / gemma
-    temperature=0.2
+    model="mistral",   # or mistral / phi3 / gemma
+    temperature=0
 )
 
 prompt = ChatPromptTemplate.from_messages(
@@ -69,6 +62,7 @@ question_answer_chain = create_stuff_documents_chain(llm, prompt)
 rag_chain = create_retrieval_chain(retriever, question_answer_chain)
 
 
+
 # ===============================
 # Routes
 # ===============================
@@ -79,15 +73,32 @@ def index():
 
 @app.route("/get", methods=["POST"])
 def chat():
-    msg = request.form["msg"]
+    msg = request.form["msg"].strip()
     print("User:", msg)
 
-    response = rag_chain.invoke({"input": msg})
-    answer = response["answer"]
+    # Handle casual greetings
+    greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"]
+    thanks = ["thank you", "thanks"]
+
+    msg_lower = msg.lower()
+
+    if msg_lower in greetings:
+        answer = "Hello! I’m your medical assistant bot. How can I help you today?"
+    elif msg_lower in thanks:
+        answer = "You’re welcome! 😊"
+    else:
+        # Send to RAG chain only if it's a meaningful query
+        response = rag_chain.invoke({"input": msg})
+        answer = response.get("answer", "Sorry, I couldn't find an answer for that.")
 
     print("Bot:", answer)
     return answer
 
 
+
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)'''
+    app.run(host="0.0.0.0", port=8080, debug=True)
+
+
